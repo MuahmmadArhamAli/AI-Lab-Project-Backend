@@ -5,7 +5,7 @@ from PIL import Image
 import io
 
 app = Flask(__name__)
-model = tf.keras.models.load_model("animal_classifier.h5")
+model = tf.keras.models.load_model("animal_classifier.keras")
 
 # Class names (replace with your actual classes)
 CLASS_NAMES = ["dog", "horse", "elephant", "butterfly", "chicken", "cat", "cow", "sheep", "spider", "squirrel"]
