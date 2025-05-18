@@ -17,28 +17,35 @@ IMAGE_SIZE = (224, 224)
 
 # Load model
 BASE_DIR = Path(__file__).parent
-MODEL_PATH = BASE_DIR / "animal10n_classifier.keras"
+MODEL_PATH = BASE_DIR / "gender_classifier_model.h5"
 
 if not MODEL_PATH.exists():
     raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
+CLASS_NAMES = ["Male", "Female"]
+
 model = tf.keras.models.load_model(MODEL_PATH)
-CLASS_NAMES = ["dog", "horse", "elephant", "butterfly", "chicken", "cat", "cow", "sheep", "spider", "squirrel"]
 
 def is_allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def preprocess_image(image):
-    """Helper function to preprocess the image"""
-    # Convert to RGB if image is RGBA
+    """Helper function to preprocess the image for model input"""
     if image.mode in ('RGBA', 'LA'):
         image = image.convert('RGB')
     
-    image = image.resize(IMAGE_SIZE)
-    img_array = tf.keras.preprocessing.image.img_to_array(image)
-    img_array = tf.expand_dims(img_array, 0) / 255.0
+    # Resize to what the model expects
+    image = image.resize((64, 64))  
+    
+    # Convert to array and normalize
+    img_array = tf.keras.preprocessing.image.img_to_array(image) / 255.0
+    
+    # Add batch dimension
+    img_array = tf.expand_dims(img_array, 0)
+    
     return img_array
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -84,7 +91,6 @@ def predict():
         return jsonify({
             "class": predicted_class,
             "confidence": confidence,
-            "all_predictions": {CLASS_NAMES[i]: float(predictions[0][i]) for i in range(len(CLASS_NAMES))}
         })
         
     except UnidentifiedImageError:
